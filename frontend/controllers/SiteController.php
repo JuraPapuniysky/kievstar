@@ -1,6 +1,7 @@
 <?php
 namespace frontend\controllers;
 
+use frontend\models\ReportForm;
 use Yii;
 use yii\base\InvalidParamException;
 use yii\web\BadRequestHttpException;
@@ -12,6 +13,7 @@ use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
+use yii\web\UploadedFile;
 
 /**
  * Site controller
@@ -72,7 +74,18 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $reportForm = new ReportForm();
+
+        if ($reportForm->load(Yii::$app->request->post())){
+            $reportForm->file = UploadedFile::getInstance($reportForm, 'file');
+            $file = $reportForm->uploadFile();
+            if ($file != false){
+                return $this->redirect([$file->file_path]);
+            }
+        }
+        return $this->render('index', [
+            'model' => $reportForm,
+        ]);
     }
 
     /**

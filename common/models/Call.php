@@ -17,8 +17,10 @@ use Yii;
  * @property int $catalog_id
  * @property int $created_at
  * @property int $updated_at
+ * @property int $file_id
  *
  * @property Catalog $catalog
+ * @property File $file
  */
 class Call extends \yii\db\ActiveRecord
 {
@@ -38,9 +40,10 @@ class Call extends \yii\db\ActiveRecord
         return [
             [['date_time'], 'safe'],
             [['cost_balance', 'cost'], 'number'],
-            [['catalog_id', 'created_at', 'updated_at'], 'integer'],
+            [['catalog_id', 'created_at', 'updated_at', 'file_id'], 'integer'],
             [['type', 'call_directions', 'phone'], 'string', 'max' => 255],
             [['catalog_id'], 'exist', 'skipOnError' => true, 'targetClass' => Catalog::className(), 'targetAttribute' => ['catalog_id' => 'id']],
+            [['file_id'], 'exist', 'skipOnError' => true, 'targetClass' => File::className(), 'targetAttribute' => ['file_id' => 'id']],
         ];
     }
 
@@ -60,6 +63,7 @@ class Call extends \yii\db\ActiveRecord
             'catalog_id' => 'Catalog ID',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
+            'file_id' => 'File ID',
         ];
     }
 
@@ -69,5 +73,13 @@ class Call extends \yii\db\ActiveRecord
     public function getCatalog()
     {
         return $this->hasOne(Catalog::className(), ['id' => 'catalog_id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getFile()
+    {
+        return $this->hasOne(File::className(), ['id' => 'file_id']);
     }
 }
