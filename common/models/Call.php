@@ -116,7 +116,41 @@ class Call extends \yii\db\ActiveRecord
         }
     }
 
+    /**
+     * @param $phone
+     * @return int|null
+     */
+    private function getSavedCatalogByPhone($phone)
+    {
+        if (($model = Catalog::findOne(['phone' => $phone])) !== null){
+            return $model->id;
+        } else {
+            $model = new Catalog();
+            $model->phone = $phone;
+            if ($model->save()){
+                return $model->id;
+            }else{
+                return null;
+            }
+
+        }
+    }
+
     public function formatDate($date)
+    {
+        //01.02.2018 01:03:56
+        // to 2018-02-01 01:03:56
+        $dateTime = explode(' ', $date);
+        $date = $dateTime[0];
+        $time = $dateTime[1];
+        $dmy = explode('.', $date);
+        $year = $dmy[2];
+        $month = $dmy[1];
+        $day = $dmy[0];
+        return $year.'-'.$month.'-'.$day.' '.$time;
+    }
+
+    public static function staticFormatDate($date)
     {
         //01.02.2018 01:03:56
         // to 2018-02-01 01:03:56
@@ -142,10 +176,16 @@ class Call extends \yii\db\ActiveRecord
             $string = self::convertUtf8($string);
             if  (isset($string{2}) && $string{2} == '.'){
                 $fields = explode(';', $string);
-                array_push($calls, self::createCall($fields, $file));
+                $fields[0] = self::staticFormatDate($fields[0]);
+                $fields[7] = self::getSavedCatalogByPhone($fields[3]);
+                $fields[8] = $file->id;
+                array_push($calls, $fields);
             }
 
         }
+
+        self::insertData($calls);
+
         return $calls;
     }
 
@@ -167,13 +207,19 @@ class Call extends \yii\db\ActiveRecord
         $catalog = $call->getSavedCatalog();
         $call->catalog_id = $catalog->id;
         $call->file_id = $file->id;
-        Yii::$app->db->createCommand()->batchInsert('call', []);
         if ($call->save()){
             return $call;
         } else {
             return $call;
         }
 
+    }
+
+    private static function insertData(array $data)
+    {
+        Yii::$app->db->createCommand()
+            ->batchInsert('call', ['date_time', 'type', 'call_directions', 'phone', 'duration', 'cost_balance', 'cost', 'catalog_id', 'file_id'], $data)
+        ->execute();
     }
 
 
