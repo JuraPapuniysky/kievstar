@@ -1,6 +1,7 @@
 <?php
 namespace frontend\controllers;
 
+use common\models\Call;
 use frontend\models\ReportForm;
 use Yii;
 use yii\base\InvalidParamException;
@@ -80,7 +81,9 @@ class SiteController extends Controller
             $reportForm->file = UploadedFile::getInstance($reportForm, 'file');
             $file = $reportForm->uploadFile();
             if ($file != false){
-                return $this->redirect([$file->file_path]);
+                return $this->render('call', [
+                    'models' =>  Call::saveData($file),
+                ]);
             }
         }
         return $this->render('index', [
@@ -223,6 +226,15 @@ class SiteController extends Controller
 
         return $this->render('resetPassword', [
             'model' => $model,
+        ]);
+    }
+
+    public function actionCall()
+    {
+        $calls = Call::find()->all();
+
+        return $this->render('call', [
+            'models' => $calls,
         ]);
     }
 }

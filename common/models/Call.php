@@ -3,6 +3,8 @@
 namespace common\models;
 
 use Yii;
+use yii\base\Model;
+use yii\behaviors\TimestampBehavior;
 
 /**
  * This is the model class for table "call".
@@ -18,12 +20,23 @@ use Yii;
  * @property int $created_at
  * @property int $updated_at
  * @property int $file_id
+ * @property int duration
  *
  * @property Catalog $catalog
  * @property File $file
  */
 class Call extends \yii\db\ActiveRecord
 {
+
+    /**
+     * {@inheritdoc}
+     */
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::className(),
+        ];
+    }
     /**
      * @inheritdoc
      */
@@ -40,7 +53,7 @@ class Call extends \yii\db\ActiveRecord
         return [
             [['date_time'], 'safe'],
             [['cost_balance', 'cost'], 'number'],
-            [['catalog_id', 'created_at', 'updated_at', 'file_id'], 'integer'],
+            [['catalog_id', 'created_at', 'updated_at', 'file_id', 'duration'], 'integer'],
             [['type', 'call_directions', 'phone'], 'string', 'max' => 255],
             [['catalog_id'], 'exist', 'skipOnError' => true, 'targetClass' => Catalog::className(), 'targetAttribute' => ['catalog_id' => 'id']],
             [['file_id'], 'exist', 'skipOnError' => true, 'targetClass' => File::className(), 'targetAttribute' => ['file_id' => 'id']],
@@ -64,6 +77,7 @@ class Call extends \yii\db\ActiveRecord
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'file_id' => 'File ID',
+            'duration' => 'Тривалість'
         ];
     }
 
@@ -81,5 +95,90 @@ class Call extends \yii\db\ActiveRecord
     public function getFile()
     {
         return $this->hasOne(File::className(), ['id' => 'file_id']);
+    }
+
+    /**
+     * @return bool|Catalog|null|static
+     */
+    private function getSavedCatalog()
+    {
+        if (($model = Catalog::findOne(['phone' => $this->phone])) !== null){
+            return $model;
+        } else {
+            $model = new Catalog();
+            $model->phone = $this->phone;
+            if ($model->save()){
+                return $model;
+            }else{
+                return false;
+            }
+
+        }
+    }
+
+    public function formatDate($date)
+    {
+        //01.02.2018 01:03:56
+        // to 2018-02-01 01:03:56
+        $dateTime = explode(' ', $date);
+        $date = $dateTime[0];
+        $time = $dateTime[1];
+        $dmy = explode('.', $date);
+        $year = $dmy[2];
+        $month = $dmy[1];
+        $day = $dmy[0];
+        return $year.'-'.$month.'-'.$day.' '.$time;
+    }
+
+    /**
+     * @param File $file
+     * @return Call[]
+     */
+    public static function saveData(File $file)
+    {
+        $fileArray = file($file->file_path);
+        $calls = [];
+        foreach ($fileArray as $string){
+            $string = self::convertUtf8($string);
+            if  (isset($string{2}) && $string{2} == '.'){
+                $fields = explode(';', $string);
+                array_push($calls, self::createCall($fields, $file));
+            }
+
+        }
+        return $calls;
+    }
+
+    /**
+     * @param array $fields
+     * @param File $file
+     * @return bool|Call
+     */
+    private static function createCall(array $fields, File $file)
+    {
+        $call = new Call();
+        $call->date_time = $call->formatDate($fields[0]);
+        $call->type = $fields[1];
+        $call->call_directions = $fields[2];
+        $call->phone = $fields[3];
+        $call->duration = $fields[4];
+        $call->cost_balance = $fields[5];
+        $call->cost = $fields[6];
+        $catalog = $call->getSavedCatalog();
+        $call->catalog_id = $catalog->id;
+        $call->file_id = $file->id;
+        Yii::$app->db->createCommand()->batchInsert('call', []);
+        if ($call->save()){
+            return $call;
+        } else {
+            return $call;
+        }
+
+    }
+
+
+    public static function convertUtf8($string)
+    {
+        return iconv('windows-1251', 'UTF-8', $string);
     }
 }
