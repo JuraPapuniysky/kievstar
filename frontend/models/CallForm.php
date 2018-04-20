@@ -39,26 +39,31 @@ class CallForm extends Model
     /**
      * @param $month
      * @param $year
-     * @return null|File
+     * @return File[]
      * @throws NotFoundHttpException
      */
     public static function getFileByDate($month, $year)
     {
-        if (($file = File::findOne(['month' => $month, 'year' => $year])) !== null) {
-            return $file;
+        $files = File::findAll(['month' => $month, 'year' => $year]);
+        if ( count($files) != 0) {
+            return $files;
         } else {
             throw new NotFoundHttpException('Отчет не найден');
         }
     }
 
     /**
-     * @param File $file
+     * @param File[] $files
      * @return array|\yii\db\ActiveRecord[]
      */
-    public static function generateReport(File $file)
+    public static function generateReport($files)
     {
-        return Call::find()->select('distinct(phone), sum(cost_balance), sum(cost)')
-            ->where(['file_id' => $file->id])
+        $fileIds = [];
+        foreach ($files as $file){
+            array_push($fileIds, $file->id);
+        }
+        return Call::find()->select('distinct(phone), sum(cost_balance) as cost_balance, sum(cost) as cost')
+            ->where(['in', 'file_id', $fileIds])
             ->groupBy('phone')
             ->asArray()->all();
     }
