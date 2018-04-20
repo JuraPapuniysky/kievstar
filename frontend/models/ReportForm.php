@@ -27,6 +27,18 @@ class ReportForm extends Model
     }
 
     /**
+     * @inheritdoc
+     */
+    public function attributeLabels()
+    {
+        return [
+            'month' => 'Місяць',
+            'year' => 'Рік',
+            'file' => 'Файл'
+        ];
+    }
+
+    /**
      * @return bool|File
      */
     public function uploadFile()
@@ -37,6 +49,8 @@ class ReportForm extends Model
             $this->file->saveAs($uploadsPath.$path);
             $file = new File();
             $file->file_path = $uploadsPath.$path;
+            $file->month = $this->month;
+            $file->year = $this->year;
             if ($file->save()) {
                 return $file;
             }

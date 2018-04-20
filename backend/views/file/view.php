@@ -32,6 +32,8 @@ $this->params['breadcrumbs'][] = $this->title;
             'file_path',
             'created_at',
             'updated_at',
+            'month',
+            'year',
         ],
     ]) ?>
 

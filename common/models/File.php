@@ -3,7 +3,6 @@
 namespace common\models;
 
 use Yii;
-use yii\behaviors\TimestampBehavior;
 
 /**
  * This is the model class for table "file".
@@ -12,21 +11,13 @@ use yii\behaviors\TimestampBehavior;
  * @property string $file_path
  * @property int $created_at
  * @property int $updated_at
+ * @property string $month
+ * @property string $year
  *
  * @property Call[] $calls
  */
 class File extends \yii\db\ActiveRecord
 {
-
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors()
-    {
-        return [
-            TimestampBehavior::className(),
-        ];
-    }
     /**
      * @inheritdoc
      */
@@ -43,6 +34,8 @@ class File extends \yii\db\ActiveRecord
         return [
             [['created_at', 'updated_at'], 'integer'],
             [['file_path'], 'string', 'max' => 255],
+            [['month'], 'string', 'max' => 2],
+            [['year'], 'string', 'max' => 4],
         ];
     }
 
@@ -56,6 +49,8 @@ class File extends \yii\db\ActiveRecord
             'file_path' => 'File Path',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
+            'month' => 'Month',
+            'year' => 'Year',
         ];
     }
 

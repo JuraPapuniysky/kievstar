@@ -2,6 +2,7 @@
 namespace frontend\controllers;
 
 use common\models\Call;
+use frontend\models\CallForm;
 use frontend\models\ReportForm;
 use Yii;
 use yii\base\InvalidParamException;
@@ -76,6 +77,8 @@ class SiteController extends Controller
     public function actionIndex()
     {
         $reportForm = new ReportForm();
+        $reportForm->month = date('m');
+        $reportForm->year = date('Y');
 
         if ($reportForm->load(Yii::$app->request->post())){
             $reportForm->file = UploadedFile::getInstance($reportForm, 'file');
@@ -231,10 +234,28 @@ class SiteController extends Controller
 
     public function actionCall()
     {
-        $calls = Call::find()->all();
 
-        return $this->render('call', [
-            'models' => $calls,
+    }
+
+    public function actionReport()
+    {
+        $model = new CallForm();
+        $model->month = date('m');
+        $model->year = date('Y');
+
+        if ($model->load(Yii::$app->request->post())) {
+            if ($model->validate()) {
+                $calls = CallForm::generateReport(CallForm::getFileByDate($model->month, $model->year));
+                return $this->render('report-generation', [
+                    'model' => $model,
+                    'calls' => $calls,
+                ]);
+            }
+        }
+
+        return $this->render('report-generation', [
+            'model' => $model,
+            'calls' => null,
         ]);
     }
 }

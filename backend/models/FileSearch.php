@@ -19,7 +19,7 @@ class FileSearch extends File
     {
         return [
             [['id', 'created_at', 'updated_at'], 'integer'],
-            [['file_path'], 'safe'],
+            [['file_path', 'month', 'year'], 'safe'],
         ];
     }
 
@@ -64,7 +64,9 @@ class FileSearch extends File
             'updated_at' => $this->updated_at,
         ]);
 
-        $query->andFilterWhere(['like', 'file_path', $this->file_path]);
+        $query->andFilterWhere(['like', 'file_path', $this->file_path])
+            ->andFilterWhere(['like', 'month', $this->month])
+            ->andFilterWhere(['like', 'year', $this->year]);
 
         return $dataProvider;
     }
