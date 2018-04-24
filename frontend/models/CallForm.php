@@ -45,7 +45,7 @@ class CallForm extends Model
     public static function getFileByDate($month, $year)
     {
         $files = File::findAll(['month' => $month, 'year' => $year]);
-        if ( count($files) != 0) {
+        if (count($files) != 0) {
             return $files;
         } else {
             throw new NotFoundHttpException('Отчет не найден');
@@ -66,5 +66,38 @@ class CallForm extends Model
             ->where(['in', 'file_id', $fileIds])
             ->groupBy('phone')
             ->asArray()->all();
+    }
+
+    /**
+     * @param array $calls
+     */
+    public static function exportExcel(array $calls)
+    {
+        $file = \Yii::createObject([
+            'class' => 'codemix\excelexport\ExcelFile',
+            'sheets' => [
+
+                'Result' => [   // Name of the excel sheet
+                    'data' => self::getValues($calls),
+
+                    // Set to `false` to suppress the title row
+                    'titles' => [
+                        'phone',
+                        'cost_balance',
+                        'cost',
+                    ],
+                ],
+            ]
+        ]);
+        $file->send('export.xlsx');
+    }
+
+    private static function getValues(array $calls)
+    {
+        $values = [];
+        foreach ($calls as $call){
+            array_push($values, array_values($call));
+        }
+        return $values;
     }
 }

@@ -246,6 +246,7 @@ class SiteController extends Controller
         if ($model->load(Yii::$app->request->post())) {
             if ($model->validate()) {
                 $calls = CallForm::generateReport(CallForm::getFileByDate($model->month, $model->year));
+                CallForm::exportExcel($calls);
                 return $this->render('report-generation', [
                     'model' => $model,
                     'calls' => $calls,
