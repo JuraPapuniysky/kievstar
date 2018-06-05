@@ -62,9 +62,10 @@ class CallForm extends Model
         foreach ($files as $file){
             array_push($fileIds, $file->id);
         }
-        return Call::find()->select('distinct(phone), sum(cost_balance) as cost_balance, sum(cost) as cost')
-            ->where(['in', 'file_id', $fileIds])
-            ->groupBy('phone')
+        return Call::find()->select('distinct(catalog.phone) as phone, sum(call.cost_balance) as cost_balance, sum(call.cost) as cost, ')
+            ->join('JOIN', 'catalog', 'call.catalog_id = catalog.id')
+            ->where(['in', 'call.file_id', $fileIds])
+            ->groupBy(['catalog.phone'])
             ->asArray()->all();
     }
 
@@ -82,7 +83,7 @@ class CallForm extends Model
 
                     // Set to `false` to suppress the title row
                     'titles' => [
-                        'phone',
+                        'Call_Phone',
                         'cost_balance',
                         'cost',
                     ],

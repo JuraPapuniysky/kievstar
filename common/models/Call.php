@@ -175,7 +175,6 @@ class Call extends \yii\db\ActiveRecord
         foreach ($fileArray as $string){
             $string = self::convertUtf8($string);
             $phoneNeedle = 'Тел./  ';
-            $catalog = null;
             if (($str = stristr($string, $phoneNeedle)) !== false){
                 $str = str_replace($phoneNeedle, '', $str);
                 if (($catalog = Catalog::getCatalogByPhone($str)) === null){
