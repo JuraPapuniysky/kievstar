@@ -118,17 +118,17 @@ class Call extends \yii\db\ActiveRecord
 
     /**
      * @param $phone
-     * @return int|null
+     * @return Catalog|null
      */
     private function getSavedCatalogByPhone($phone)
     {
         if (($model = Catalog::findOne(['phone' => $phone])) !== null){
-            return $model->id;
+            return $model;
         } else {
             $model = new Catalog();
             $model->phone = $phone;
             if ($model->save()){
-                return $model->id;
+                return $model;
             }else{
                 return null;
             }
@@ -174,10 +174,20 @@ class Call extends \yii\db\ActiveRecord
         $calls = [];
         foreach ($fileArray as $string){
             $string = self::convertUtf8($string);
-            if  (isset($string{2}) && $string{2} == '.'){
+            $phoneNeedle = 'Тел./  ';
+            $catalog = null;
+            if (($str = stristr($string, $phoneNeedle)) !== false){
+                $str = str_replace($phoneNeedle, '', $str);
+                if (($catalog = Catalog::getCatalogByPhone($str)) === null){
+                    $catalog = new Catalog();
+                    $catalog->phone = $str;
+                    $catalog->save();
+                }
+            }
+            if  (isset($string{2}) && $string{2} == '.' && $catalog !== null){
                 $fields = explode(';', $string);
                 $fields[0] = self::staticFormatDate($fields[0]);
-                $fields[7] = self::getSavedCatalogByPhone($fields[3]);
+                $fields[7] = $catalog->id;
                 $fields[8] = $file->id;
                 array_push($calls, $fields);
             }

@@ -69,4 +69,13 @@ class Catalog extends \yii\db\ActiveRecord
     {
         return $this->hasMany(Call::className(), ['catalog_id' => 'id']);
     }
+
+    /**
+     * @param $phone
+     * @return Catalog|null
+     */
+    public static function getCatalogByPhone($phone)
+    {
+        return static::findOne(['phone' => $phone]);
+    }
 }
